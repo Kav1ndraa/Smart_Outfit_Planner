@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Outfit Planner</title>
+  <meta name="description" content="Smart Outfit Planner suggests outfits from your own wardrobe based on occasion, weather and color match.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23141B30'/%3E%3Cpath d='M8.5 5.5 4 8l1.6 3.4 2-1V19h8.8v-8.6l2 1L20 8l-4.5-2.5a3.5 3.5 0 0 1-7 0z' fill='%23F0B02F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-open auth-required">
+  <a class="skip" href="#planner">Skip to planner</a>
+
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="brand" href="#top" aria-label="Smart Outfit Planner home">
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#141B30"/><path d="M8.5 5.5 4 8l1.6 3.4 2-1V19h8.8v-8.6l2 1L20 8l-4.5-2.5a3.5 3.5 0 0 1-7 0z" fill="#F0B02F"/></svg>
+        <span>Smart Outfit Planner</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#planner">Planner</a>
+        <a href="#wardrobe">Wardrobe</a>
+        <a href="#week">Weekly plan</a>
+        <a href="#about">About</a>
+        <a href="#account" id="accountNav">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <h1>Dress for the day without opening every drawer.</h1>
+          <p class="lead">Build your wardrobe, explore curated pieces for Men and Women, and get outfit combinations matched to your occasion, colours and weather.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#planner">Plan an outfit</a>
+            <a class="btn btn-ghost" href="#wardrobe">Add your clothes</a>
+          </div>
+        </div>
+        <aside class="rail-panel" aria-label="Sample outfit preview">
+          <p class="rail-title">Today's pick from your wardrobe</p>
+          <div class="rail" id="heroRail"></div>
+          <p class="rail-meta" id="heroMeta"></p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="steps-section" aria-labelledby="how-h">
+      <div class="wrap">
+        <h2 id="how-h" class="section-title">How it works</h2>
+        <ol class="steps">
+          <li><span class="step-n">1</span><h3>Add your clothes</h3><p>Save each piece with its type, color, warmth and the occasions it suits.</p></li>
+          <li><span class="step-n">2</span><h3>Set occasion and weather</h3><p>Choose where you are going and the temperature. Live weather is optional.</p></li>
+          <li><span class="step-n">3</span><h3>Pick and save</h3><p>Compare three matched outfits, save your favourite and place it in your week.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- PLANNER -->
+    <section id="planner" class="section" aria-labelledby="planner-h">
+      <div class="wrap">
+        <h2 id="planner-h" class="section-title">Outfit planner</h2>
+        <div class="planner-grid">
+          <form id="planForm" class="card controls" novalidate>
+            <div class="field">
+              <label for="styleAudience">Style for</label>
+              <select id="styleAudience">
+                <option value="men">Men</option>
+                <option value="women">Women</option>
+                <option value="unisex" selected>Unisex / All styles</option>
+              </select>
+            </div>
+            <fieldset>
+              <legend>Occasion</legend>
+              <div class="chips" id="occasionChips"></div>
+            </fieldset>
+
+            <div class="field">
+              <label for="temp">Temperature <output id="tempOut" for="temp">26°C · Mild</output></label>
+              <input type="range" id="temp" min="0" max="45" value="26">
+            </div>
+
+            <div class="field row">
+              <label class="check"><input type="checkbox" id="rain"> It is raining</label>
+              <button type="button" class="btn btn-small btn-ghost" id="liveWeather">Use live weather</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Suggest outfits</button>
+            <button type="button" class="btn btn-ghost btn-block" id="reshuffle" hidden>Show different options</button>
+          </form>
+
+          <div class="results" id="results" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WARDROBE -->
+    <section id="wardrobe" class="section alt" aria-labelledby="wardrobe-h">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="wardrobe-h" class="section-title">My wardrobe</h2>
+          <p class="muted" id="wardrobeStats"></p>
+        </div>
+
+        <div class="wardrobe-grid">
+          <form id="itemForm" class="card" novalidate>
+            <h3>Add a piece</h3>
+            <div class="field">
+              <label for="itemAudience">Who is this item for?</label>
+              <select id="itemAudience">
+                <option value="men">Men</option>
+                <option value="women">Women</option>
+                <option value="unisex" selected>Unisex</option>
+              </select>
+            </div>
+            <p class="muted small category-hint" id="categoryHint">Choose Men or Women to see detailed clothing types.</p>
+            <div class="field">
+              <label for="itemName">Name</label>
+              <input type="text" id="itemName" maxlength="40" placeholder="e.g. Navy polo shirt" required>
+            </div>
+            <div class="two">
+              <div class="field">
+                <label for="itemCat">Type</label>
+                <select id="itemCat"></select>
+              </div>
+              <div class="field">
+                <label for="itemColor">Color</label>
+                <input type="color" id="itemColor" value="#2f5ea8">
+              </div>
+            </div>
+            <div class="field">
+              <label for="itemWarmth">Warmth</label>
+              <select id="itemWarmth">
+                <option value="1">Light (summer)</option>
+                <option value="2" selected>Medium</option>
+                <option value="3">Heavy (winter)</option>
+              </select>
+            </div>
+            <fieldset class="field">
+              <legend>Suits these occasions</legend>
+              <div class="checks" id="itemOccasions"></div>
+            </fieldset>
+            <label class="check"><input type="checkbox" id="itemRain"> Works well in rain</label>
+            <p class="form-error" id="itemError" role="alert" hidden></p>
+            <button type="submit" class="btn btn-primary btn-block">Add to wardrobe</button>
+          </form>
+
+          <div class="wardrobe-library">
+            <section class="catalogue card" aria-labelledby="catalogue-title">
+              <div class="section-head">
+                <div><p class="eyebrow">CURATED CLOSET</p><h3 id="catalogue-title">Quick-add catalogue</h3></div>
+                <span class="muted small">Add a sample piece in one tap</span>
+              </div>
+              <div class="catalogue-controls">
+                <label for="catalogAudience">Shop for</label>
+                <select id="catalogAudience"><option value="men">Men</option><option value="women">Women</option><option value="unisex">Unisex</option></select>
+                <label for="catalogFilter">Category</label>
+                <select id="catalogFilter"><option value="all">All categories</option></select>
+              </div>
+              <div class="catalogue-grid" id="catalogueGrid"></div>
+            </section>
+            <div class="toolbar">
+              <div class="chips" id="filters" role="group" aria-label="Filter by type"></div>
+              <div class="toolbar-actions">
+                <button type="button" class="btn btn-small btn-ghost" id="loadSample">Load sample wardrobe</button>
+                <button type="button" class="btn btn-small btn-ghost" id="clearAll">Clear all</button>
+              </div>
+            </div>
+            <div class="items" id="wardrobeGrid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEEKLY PLAN -->
+    <section id="week" class="section" aria-labelledby="week-h">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="week-h" class="section-title">Weekly plan</h2>
+          <div class="toolbar-actions">
+            <button type="button" class="btn btn-small btn-primary" id="autoPlan">Auto-plan my week</button>
+            <button type="button" class="btn btn-small btn-ghost" id="printWeek">Print</button>
+            <button type="button" class="btn btn-small btn-ghost" id="clearWeek">Clear week</button>
+          </div>
+        </div>
+        <p class="muted">Auto-plan uses College outfits on weekdays and Casual on weekends, based on the temperature set in the planner. It avoids repeating the same top.</p>
+        <div class="week" id="weekList"></div>
+
+        <h3 class="sub-title">Saved outfits</h3>
+        <div class="saved" id="savedList"></div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section alt" aria-labelledby="about-h">
+      <div class="wrap about-grid">
+        <div>
+          <h2 id="about-h" class="section-title">About the project</h2>
+          <p>Smart Outfit Planner is a front-end web application that helps a user decide what to wear. It works on the user's own wardrobe and scores every possible combination of top, bottom, footwear, outerwear and accessory.</p>
+          <h3 class="sub-title">Features</h3>
+          <ul class="plain">
+            <li>Digital wardrobe with add, filter and delete</li>
+            <li>Outfit suggestions by occasion, temperature and rain</li>
+            <li>Color matching based on hue and neutral shades</li>
+            <li>Optional live weather using the Open-Meteo service</li>
+            <li>Saved outfits and a printable weekly plan</li>
+            <li>Data stays in the browser using localStorage</li>
+          </ul>
+          <h3 class="sub-title">Technologies used</h3>
+          <p>HTML5, CSS3 and JavaScript (ES6). No framework and no server are needed.</p>
+        </div>
+        <div class="card">
+          <h3>How an outfit is scored</h3>
+          <table>
+            <thead><tr><th scope="col">Factor</th><th scope="col">Weight</th><th scope="col">What it checks</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Color match</th><td>50%</td><td>Neutral shades pair with anything. Other colors score higher when close in hue or opposite on the color wheel.</td></tr>
+              <tr><th scope="row">Weather fit</th><td>45%</td><td>Total warmth of the layers compared with the target for the temperature. Below 16°C an outer layer is required.</td></tr>
+              <tr><th scope="row">Accessory</th><td>5%</td><td>Small bonus when an accessory completes the look.</td></tr>
+            </tbody>
+          </table>
+          <p class="muted small">Rain lowers the score of footwear that is not marked as working well in rain.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p><strong>Smart Outfit Planner</strong> · Mini project</p>
+      <p>Kavindra Rawal · TYCS (B.Sc. Computer Science)</p>
+    </div>
+  </footer>
+
+  <section class="auth-overlay" id="authOverlay" aria-labelledby="authTitle">
+    <div class="auth-card">
+      <div class="auth-brand-mark" aria-hidden="true">✦</div>
+      <p class="eyebrow">SMART OUTFIT PLANNER · MEMBER ACCESS</p>
+      <h2 id="authTitle">Your style. Your space.</h2>
+      <p class="muted">Sign in to unlock your personal wardrobe, outfit matches and weekly style planner.</p>
+      <div class="auth-tabs"><button type="button" class="auth-tab active" data-auth-mode="login">Log in</button><button type="button" class="auth-tab" data-auth-mode="signup">Create account</button></div>
+      <form id="authForm">
+        <div class="field"><label for="authEmail">Email address</label><input type="email" id="authEmail" autocomplete="email" placeholder="you@example.com" required></div>
+        <div class="field"><label for="authPassword">Password</label><div class="password-wrap"><input type="password" id="authPassword" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required><button type="button" id="togglePassword">Show</button></div><p class="muted small">Use 8+ characters, including an uppercase letter and a special character.</p></div>
+        <p class="form-error" id="authError" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="authSubmit">Log in</button>
+      </form>
+      <div class="auth-security"><span class="security-dot"></span><span>Email authentication · Protected access</span></div>
+      <p class="muted tiny">First-time here? Choose <strong>Create account</strong>. Secure sign-in activates after you connect Firebase using the included setup guide.</p>
+      <p id="authStatus" class="auth-status" role="status"></p>
+    </div>
+  </section>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
