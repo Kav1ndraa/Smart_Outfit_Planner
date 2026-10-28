@@ -101,14 +101,114 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const uid = () => 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+  let cloudUser = null;
+  let cloudReady = false;
+  let cloudSaveTimer = null;
+  let lastCloudUid = null;
+  let appInitialized = false;
+
   const store = {
     get(key, fallback) {
       try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
     },
     set(key, value) {
       try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ }
+      scheduleCloudSave();
     }
   };
+
+  function saveLocalSnapshot() {
+    try {
+      localStorage.setItem('sop_wardrobe', JSON.stringify(wardrobe));
+      localStorage.setItem('sop_saved', JSON.stringify(saved));
+      localStorage.setItem('sop_week', JSON.stringify(week));
+    } catch (e) { /* local storage unavailable */ }
+  }
+
+  function cloudDocument() {
+    return firebase.firestore().collection('users').doc(cloudUser.uid)
+      .collection('plannerData').doc('main');
+  }
+
+  function scheduleCloudSave() {
+    if (!cloudReady || !cloudUser || !window.firebase || !firebase.firestore) return;
+    if (cloudSaveTimer) window.clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = window.setTimeout(async () => {
+      try {
+        await cloudDocument().set({
+          wardrobe: wardrobe,
+          saved: saved,
+          week: week,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {
+        console.error('Could not save planner data to Firestore:', e);
+        toast('Cloud save failed. Check your connection and Firestore Rules.');
+      }
+    }, 350);
+  }
+
+  function renderAfterCloudLoad() {
+    if (!appInitialized) return;
+    renderCatalogue(); renderHero(); renderWardrobe(); renderSaved(); renderWeek(); runPlanner(false);
+  }
+
+  async function connectPlannerCloud(user) {
+    if (!window.firebase || !firebase.firestore) {
+      toast('Firestore SDK is missing. Check index.html script.');
+      return;
+    }
+    cloudUser = user;
+    cloudReady = false;
+    try {
+      const ref = cloudDocument();
+      const snap = await ref.get();
+      if (snap.exists) {
+        const data = snap.data() || {};
+        wardrobe = Array.isArray(data.wardrobe) ? data.wardrobe : [];
+        saved = Array.isArray(data.saved) ? data.saved : [];
+        week = data.week && typeof data.week === 'object' ? data.week : {};
+        saveLocalSnapshot();
+      } else {
+        // On the first login, keep the current browser data. After a previous account
+        // has signed out, start fresh rather than copying that account's local data.
+        if (lastCloudUid && lastCloudUid !== user.uid) {
+          wardrobe = sampleWardrobe(); saved = []; week = {};
+          saveLocalSnapshot();
+        }
+        cloudReady = true;
+        await ref.set({
+          wardrobe: wardrobe, saved: saved, week: week,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      lastCloudUid = user.uid;
+      cloudReady = true;
+      renderAfterCloudLoad();
+      toast('Your planner is synced to your account.');
+    } catch (e) {
+      cloudReady = false;
+      console.error('Firestore load failed:', e);
+      toast('Cloud connection failed. Check Firestore Rules and internet.');
+    }
+  }
+
+  function handlePlannerAuth(user) {
+    if (user) {
+      if (cloudUser && cloudUser.uid === user.uid && cloudReady) return;
+      connectPlannerCloud(user);
+      return;
+    }
+    if (cloudUser) {
+      cloudReady = false;
+      cloudUser = null;
+      if (cloudSaveTimer) window.clearTimeout(cloudSaveTimer);
+      // Clear the previous account's data from this browser after sign-out.
+      wardrobe = sampleWardrobe(); saved = []; week = {};
+      saveLocalSnapshot();
+      renderAfterCloudLoad();
+    }
+  }
 
   function mulberry32(a) {
     return function () {
@@ -650,4 +750,8 @@
   }
 
   init();
+  appInitialized = true;
+  if (window.firebase && firebase.apps && firebase.apps.length && firebase.auth) {
+    firebase.auth().onAuthStateChanged(handlePlannerAuth);
+  }
 })();
